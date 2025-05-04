@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myAccountApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('myac.avif');
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        h1, h2 {
+            color: #007bff;
+            text-align: center;
+        }
+        .list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .list li {
+            margin-top: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            position: relative;
+            transition: background-color 0.3s;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+        .list li div {
+            flex: 1;
+        }
+        .total-display {
+            font-size: 16px;
+            text-align: center;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="Angular JS File/angular.min.js"></script>
+    <script>
+        angular.module('myAccountApp', [])
+        .controller('MyAccountController', function($scope) {
+            var vm = this;
+
+            // Prompt user to enter name
+            vm.userName = prompt("Please enter your name:");
+
+            // Load expenses and splits from localStorage
+            vm.expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            vm.splits = JSON.parse(localStorage.getItem('splits')) || [];
+
+            // Combine expenses and splits, sort by date
+            vm.allEntries = vm.expenses.concat(vm.splits).sort(function(a, b) {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            // Function to get split details
+            vm.getSplitDetails = function(splitWith) {
+                return splitWith.map(friend => friend.name + " ($" + friend.amount + ")").join(", ");
+            };
+
+            // Expose allEntries and helper functions to the view
+            $scope.allEntries = vm.allEntries;
+            $scope.getSplitDetails = vm.getSplitDetails;
+        });
+    </script>
+</head>
+<body ng-controller="MyAccountController as accountCtrl">
+    <div class="container">
+        <h1>Hello, {{ accountCtrl.userName }}</h1>
+
+        <!-- All Entries Section -->
+        <div>
+            <h2>All Entries</h2>
+            <ul class="list">
+                <li ng-repeat="entry in allEntries track by $index">
+                    <div>
+                        {{ entry.date | date: 'yyyy MMMM dd' }} - 
+                        {{ entry.type == 'split' ? 'Split: ' : 'Expense: ' }}{{ entry.name }} - ${{ entry.type == 'split' ? entry.totalAmount : entry.amount }} 
+                        <span ng-if="entry.type == 'split'">
+                            (Split with: {{ getSplitDetails(entry.splitWith) }})
+                        </span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

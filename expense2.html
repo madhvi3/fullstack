@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="billSplitterApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Splitter with Friends</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('abc.webp'); /* Custom background image */
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        h1, h2 {
+            color: #007bff;
+            text-align: center;
+        }
+        form, .people-form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none; /* Remove border */
+            background-color: #e8f0fe; /* Light blue background for inputs */
+            color: #333;
+            outline: none;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input:focus, button:focus {
+            box-shadow: 0 0 8px rgba(0, 56, 179, 0.5);
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .list li {
+            margin-top: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            position: relative;
+            transition: background-color 0.3s;
+            color: #333;
+            display: flex;
+            align-items: center; /* Align items horizontally */
+        }
+        .list li input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .list li.paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .paid-marker {
+            cursor: pointer;
+            color: #28a745;
+            margin-left: auto; /* Push to right */
+            font-size: 20px;
+        }
+        .total-display, .saved-splits {
+            font-size: 16px;
+            text-align: center;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .saved-split {
+            background-color: #f8f9fa; /* Light gray background */
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 5px;
+            list-style-type: none;
+            position: relative;
+            width: calc(100% - 22px);
+            display: flex; /* Display horizontally */
+            align-items: center;
+            justify-content: space-between; /* Space between elements */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+        }
+        .saved-split span {
+            margin-right: 10px;
+            color: #333; /* Text color */
+        }
+        .saved-split-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px; /* Add some space */
+        }
+        .delete-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .expense-name {
+            color: #007bff; /* Expense name color */
+            font-weight: bold; /* Make it bold */
+        }
+    </style>
+    <script src="Angular JS File/angular.min.js"></script>
+    <script>
+        angular.module('billSplitterApp', [])
+        .controller('BillSplitController', function() {
+            this.totalAmount = '';
+            this.numberOfPeople = '';
+            this.expenseName = '';
+            this.people = [];
+            this.splits = JSON.parse(localStorage.getItem('splits')) || [];
+
+            this.calculateSplit = function() {
+                if (this.totalAmount && this.numberOfPeople && this.expenseName) {
+                    this.people = [];
+                    let splitAmount = this.totalAmount / this.numberOfPeople;
+                    for (let i = 0; i < this.numberOfPeople; i++) {
+                        this.people.push({ name: '', amount: splitAmount.toFixed(2), paid: false });
+                    }
+                    // Clear inputs
+                    this.totalAmount = '';
+                    this.numberOfPeople = '';
+                    this.expenseName = '';
+                }
+            };
+
+            this.setPaid = function(index) {
+                this.people[index].paid = !this.people[index].paid;
+            };
+
+            this.saveSplit = function() {
+                this.splits.push({
+                    date: new Date().toISOString().substring(0, 10),
+                    expenseName: this.expenseName,
+                    splits: angular.copy(this.people)
+                });
+                localStorage.setItem('splits', JSON.stringify(this.splits));
+                this.resetForm();
+            };
+
+            this.resetForm = function() {
+                this.people = [];
+            };
+
+            this.getTotalPaid = function() {
+                let totalPaid = this.people.reduce((total, person) => person.paid ? total + parseFloat(person.amount) : total, 0).toFixed(2);
+                let totalUnpaid = (this.totalAmount - totalPaid).toFixed(2);
+                return this.people.every(person => person.paid) ? `Total Paid: $${totalPaid}` : `Remaining: $${totalUnpaid}`;
+            };
+
+            this.deleteSplit = function(index) {
+                this.splits.splice(index, 1);
+                localStorage.setItem('splits', JSON.stringify(this.splits));
+            };
+        });
+    </script>
+</head>
+<body ng-controller="BillSplitController as billCtrl">
+    <div class="container">
+        <h1>Bill Splitter with Friends</h1>
+        <form ng-submit="billCtrl.calculateSplit()" novalidate>
+            <input type="text" ng-model="billCtrl.expenseName" placeholder="Expense Name" required>
+            <input type="number" ng-model="billCtrl.totalAmount" placeholder="Total Amount" min="0.01" step="0.01" required>
+            <input type="number" ng-model="billCtrl.numberOfPeople" placeholder="Number of People" min="1" step="1" required>
+            <button type="submit">Calculate Split</button>
+        </form>
+        <form class="people-form" ng-if="billCtrl.people.length > 0">
+            <ul class="list">
+                <li ng-repeat="person in billCtrl.people track by $index">
+                    <input type="text" ng-model="person.name" placeholder="Name of Person {{$index + 1}}" required>
+                    <span>{{ person.amount }}</span>
+                    <span class="paid-marker" ng-click="billCtrl.setPaid($index)" ng-class="{'paid': person.paid}">✔</span>
+                </li>
+            </ul>
+            <button ng-click="billCtrl.saveSplit()" ng-disabled="!billCtrl.people.every(person => person.paid)">Save Split</button>
+        </form>
+        <div class="total-display" ng-if="billCtrl.people.length > 0">
+            {{ billCtrl.getTotalPaid() }}
+        </div>
+        <div class="saved-splits" ng-if="billCtrl.splits.length > 0">
+            <h2>Saved Splits</h2>
+            <div class="saved-split-container">
+                <div class="saved-split" ng-repeat="split in billCtrl.splits track by $index">
+                    <span><span class="expense-name">{{ split.expenseName }}</span> - {{ split.date }}</span>
+                    <ul class="split-details">
+                        <li ng-repeat="person in split.splits">
+                            <span>{{ person.name }} - ${{ person.amount }}</span>
+                        </li>
+                    </ul>
+                    <span ng-click="billCtrl.deleteSplit($index)" class="delete-btn">Delete</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

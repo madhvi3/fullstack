@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="angular.min.js">
+</script>
+</head>
+<body>
+<div ng-app="" ng-init="fName=’David’; lName=’Beckham’;">
+<h2>First Name : <input type="text" ng-model="fName" /></h2>
+<h2>Last Name : <input type="text" ng-model="lName" /></h2>
+<h2>First Name : <span ng-bind="fName" /></h3>
+<h2>Last Name : {{lName}}</h3>
+<h3>Full Name : {{fName+ " "+ lName}}</h3>
+</div>
+</body>
+</html>
